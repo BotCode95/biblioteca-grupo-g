@@ -54,7 +54,7 @@ router.delete('/categoria/:id', async (req,res) => {
 
         respuesta = await conexion.query(query, [id]);
 
-        res.send({'respuesta': respuesta.affectedRows}); //add se borro correctamente
+        res.status(200).send({'respuesta': respuesta.affectedRows}); //add se borro correctamente
     } catch (error) {
         res.status(413).send({"Error" : error.message});
     }
