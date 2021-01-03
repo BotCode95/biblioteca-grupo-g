@@ -20,24 +20,34 @@ router.get('/categoria/:id', async (req,res) => {
 
       res.status(200).send({"respuesta" : respuesta});
   } catch (error) {
-      res.status(413).send({"Error" : error.message});
+      res.status(413).send({"Error" : "Error inesperado"});
   }
-})
+});
 
 router.post('/categoria', async (req,res) => {
-     const {nombre}=req.body;
+    const {nombre}=req.body;
     try {
         if(!nombre) { 
             throw new Error('Ingrese un nombre de categoría');
         }
 
-        const query = 'INSERT INTO categoria (nombre) VALUE (?)';
-        const respuesta = await conexion.query(query, [nombre]);
-        res.status(200).send({"respuesta" : respuesta.insertId});
+        let query = "SELECT id FROM categoria WHERE nombre = ?";
+        let respuesta = await conexion.query(query, [nombre]);
+    
+        if(respuesta.length > 0) {
+            throw new Error("Ese nombre de categoría ya existe");
+        }
+
+        query = 'INSERT INTO categoria (nombre) VALUE (?)';
+        respuesta = await conexion.query(query, [nombre]);
+
+        query = "SELECT * FROM categoria WHERE nombre = ?";
+        respuesta = await conexion.query(query, [nombre]);
+        res.status(200).send({"respuesta" : respuesta});
     } catch (error) {
         res.status(413).send({"Error" : error.message});
     }
-})
+});
 
 router.delete('/categoria/:id', async (req,res) => {
     const {id} = req.params;
@@ -54,7 +64,7 @@ router.delete('/categoria/:id', async (req,res) => {
 
         respuesta = await conexion.query(query, [id]);
 
-        res.status(200).send({'respuesta': respuesta.affectedRows}); //add se borro correctamente
+        res.status(200).send({'respuesta': "Se borro correctamente"});
     } catch (error) {
         res.status(413).send({"Error" : error.message});
     }
