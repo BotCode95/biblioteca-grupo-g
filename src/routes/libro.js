@@ -14,7 +14,7 @@ router.get("/libro", async (req,res) => {
     }
 });
 
-        
+   
 router.get('/libro/:id', async (req,res) => {
     const {id} = req.params;
   try {
@@ -60,9 +60,8 @@ router.post("/libro", async (req, res) => {
                res.status(200).send({"respuesta" : respuesta});
     
         }
-        catch(e){
-            console.error(e.message);
-            res.status(413).send({"Error" : e.message});
+        catch(error){
+            res.status(413).send({"Error" : error.message});
         }
         });
 
@@ -91,16 +90,16 @@ router.put("/libro/:id" , async (req, res)=>{ //Para modificar un libro
          res.status(200).send({"MODIFICADO" : respuesta});
         
         }
-        catch(e){
-            console.error(e.message);
-            res.status(413).send({"Error" : e.message});
+        catch(error){
+          
+            res.status(413).send({"Error" : error.message});
         }
  });
 
  //PUT '/libro/prestar/:id' y {id:numero, persona_id:numero} devuelve 200 y {mensaje: "se presto correctamente"} o bien status 413, {mensaje: <descripcion del error>} "error inesperado", "el libro ya se encuentra prestado, no se puede prestar hasta que no se devuelva", "no se encontro el libro", "no se encontro la persona a la que se quiere prestar el libro"
 
  router.put("/libro/prestar/:id" , async (req, res)=>{ //Para modificar el campo persona_id para prestar libro
-    const {nombre, descripcion, categoria_id, persona_id} = req.body;
+    const {persona_id} = req.body;
     const {id} = req.params;
     try{
          if(!persona_id){
@@ -118,22 +117,17 @@ router.put("/libro/:id" , async (req, res)=>{ //Para modificar un libro
          query = "SELECT * FROM persona WHERE id = ? ";
          respuesta = await conexion.query(query, [persona_id]);
  
-        
          if(respuesta.length == 0){
              throw new Error("No se encontro la persona a la que se quiere prestar el libro");
          }
 
-
          query = "SELECT persona_id FROM libro WHERE id = ? AND persona_id IS NULL"; //
          respuesta = await conexion.query(query, [id]);
- 
          
         console.log(respuesta.persona_id);
-        
          if(respuesta.length == 0 ){
              throw new Error("El libro se encuentra prestado");
          }
-
 
          query = "UPDATE libro SET persona_id = ? WHERE id = ?";
          respuesta = await conexion.query(query, [persona_id, id]);
@@ -141,36 +135,26 @@ router.put("/libro/:id" , async (req, res)=>{ //Para modificar un libro
          query = "SELECT * FROM libro WHERE id = ?";
          respuesta = await conexion.query(query, [id]);
          res.status(200).send({"El libro fue prestado correctamente" : respuesta});
-        
         }
-        catch(e){
-            console.error(e.message);
-            res.status(413).send({"Error" : e.message});
+        catch(error){
+            res.status(413).send({"Error" : error.message});
         }
- 
- 
+
  });
 
- //PUT '/libro/devolver/:id' y {} devuelve 200 y {mensaje: "se realizo la devolucion correctamente"} o bien status 413, {mensaje: <descripcion del error>} "error inesperado", "ese libro no estaba prestado!", "ese libro no existe"
-
-
-
- router.put("/libro/devolver/:id" , async (req, res)=>{ //Para modificar el campo persona_id a null para devolver libro)
-    const {nombre, descripcion, categoria_id, persona_id} = req.body;
+ router.put("/libro/devolver/:id" , async (req, res)=>{ 
+  
     const {id} = req.params;
     try{
         if(!id){
              throw new Error("No completaste el id del libro"); //SI NO LO COMPLETAS NO ME TIRA ESTE ERROR (REVISAR)
         }
-
         let query = "SELECT persona_id FROM libro WHERE id = ? AND persona_id IS NOT NULL";
         let respuesta = await conexion.query(query, [id]);
                
-       
         if(respuesta.length == 0){
             throw new Error("Ese libro no esta prestado");
         }
-        
         
         query = "UPDATE libro SET persona_id = NULL WHERE id = ?";
         respuesta = await conexion.query(query, [id]);
@@ -180,11 +164,43 @@ router.put("/libro/:id" , async (req, res)=>{ //Para modificar un libro
         res.status(200).send({"El libro fue devuelto correctamente" : respuesta});
        
        }
-       catch(e){
-           console.error(e.message);
-           res.status(413).send({"Error" : e.message});
+       catch(error){
+           res.status(413).send({"Error" : error.message});
        }
+});
 
+router.delete('/libro/:id', async(req, res) => {
+    const { id } = req.params;
+    const { persona_id } = req.body;
 
+    try {
+        //verificar si existe el libro
+        let query = "SELECT * FROM libro WHERE id = ?";
+        let respuesta = await conexion.query(query, [id]);
+        console.log(respuesta.length);
+
+        if (respuesta.length == 0) {
+            throw new Error("No se encuentra ese libro");
+        }
+
+        //verificar si está prestado
+        query = "SELECT persona_id FROM libro WHERE id = ? AND persona_id IS NULL";
+        respuesta = await conexion.query(query, [id]);
+
+        if (respuesta.length == 0) {
+            throw new Error("Ese libro está prestado, no se puede borrar");
+        }
+
+        //si no está prestado, borrar
+        query = 'DELETE FROM libro WHERE id = ?';
+        respuesta = await conexion.query(query, [id]);
+
+        res.status(200).send({ "respuesta": "El libro se borró correctamente" });
+
+        console.log(respuesta);
+
+    } catch (error) {
+        res.status(413).send({ "Error": error.message });
+    }
 });
 module.exports = router;
