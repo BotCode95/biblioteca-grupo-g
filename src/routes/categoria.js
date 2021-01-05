@@ -18,9 +18,13 @@ router.get('/categoria/:id', async (req,res) => {
       const query = 'SELECT * FROM categoria WHERE id = ?';
       const respuesta = await conexion.query(query, id);
 
+      if (respuesta.length == 0) {
+        throw new Error("Categoría no encontrada");
+      }
+
       res.status(200).send({"respuesta" : respuesta});
   } catch (error) {
-      res.status(413).send({"Error" : "Error inesperado"});
+      res.status(413).send({"Error" : error.message});
   }
 });
 
@@ -56,8 +60,12 @@ router.delete('/categoria/:id', async (req,res) => {
 
         let respuesta = await conexion.query(query, [id]);
 
+        if (respuesta.length == 0) {
+            throw new Error("Esa categoría no existe");
+        }
+
         if (respuesta.length > 0) {
-            throw new Error("Esta categoria tiene libros asociados, no se puede borrar");
+            throw new Error("Esta categoría tiene libros asociados, no se puede borrar");
         }
 
         query = 'DELETE FROM categoria WHERE id = ?';
@@ -69,7 +77,6 @@ router.delete('/categoria/:id', async (req,res) => {
         res.status(413).send({"Error" : error.message});
     }
 })
-
 
 //No es necesario el PUT
 module.exports = router;

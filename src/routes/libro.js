@@ -19,7 +19,11 @@ router.get('/libro/:id', async (req,res) => {
     const {id} = req.params;
   try {
       const query = 'SELECT * FROM libro WHERE id = ?';
-      const respuesta = await conexion.query(query, id);
+      const respuesta = await conexion.query(query, [id]);
+      
+      if(respuesta.length == 0){
+        throw new Error("Ese libro no se esta en inventario");
+        }
 
       res.status(200).send({"respuesta" : respuesta});
   } catch (error) {
@@ -28,11 +32,11 @@ router.get('/libro/:id', async (req,res) => {
 });
 
 router.post("/libro", async (req, res) => {
-    const {nombre, descripcion, categoria_id} = req.body;
+    const {nombre, descripcion, categoria_id, persona_id} = req.body;
     try{
         //valido que me envie correctamente la info
-        if(!nombre||!descripcion||!categoria_id){
-            throw new Error("Faltaron completar datos");
+        if(isEmpty(nombre)||isEmpty(categoria_id)){
+            throw new Error("Nombre y categoria son datos obligatorios");
            }
 
            //verifico que no existe ese libro previamente
@@ -49,11 +53,11 @@ router.post("/libro", async (req, res) => {
 
            if(respuesta.length == 0){
                throw new Error("esa categoria no existe");
-           }
+           }           
                        
         //Guardo el nuevo libro
                query = "INSERT INTO libro (nombre, descripcion, categoria_id, persona_id) VALUES (?, ?, ?,?)";
-               respuesta = await conexion.query(query, [nombre.toUpperCase(), req.body.descripcion, req.body.categoria_id, req.body.persona_id]);
+               respuesta = await conexion.query(query, [nombre.toUpperCase(), descripcion, categoria_id, persona_id]);
                 
                query = "SELECT * FROM libro WHERE nombre = ?";
                respuesta = await conexion.query(query, [nombre])
@@ -70,25 +74,22 @@ router.put("/libro/:id" , async (req, res)=>{ //Para modificar un libro
    const {nombre, descripcion, categoria_id, persona_id} = req.body;
    const {id} = req.params;
     try{
-         if(!nombre || !descripcion || !categoria_id){
-              throw new Error("No completaste los campos");
-         }
+        if(isEmpty(nombre) ||isEmpty(categoria_id) ){
+            throw new Error("No completaste los campos obligatorios");
+        }
  
-         let query = "SELECT * FROM libro WHERE nombre = ? AND categoria_id = ? AND id = ?";
-         let respuesta = await conexion.query(query, [nombre, categoria_id, id]);
+        let query = "SELECT * FROM libro WHERE nombre = ? AND categoria_id = ? AND id = ?";
+        let respuesta = await conexion.query(query, [nombre, categoria_id, id]);
  
-        
-         if(respuesta.length == 0){
+        if(respuesta.length == 0){
              throw new Error("Solo se puede modificar la descripcion");
-         }
- 
-         query = "UPDATE libro SET nombre = ?, descripcion = ?, categoria_id = ?, persona_id = ? WHERE id = ?";
-         respuesta = await conexion.query(query, [nombre.toUpperCase(), descripcion, categoria_id, persona_id, id]);
+        }
+         query = "UPDATE libro SET nombre = ?, descripcion = ?, categoria_id = ? WHERE id = ?";
+         respuesta = await conexion.query(query, [nombre.toUpperCase(), descripcion, categoria_id, id]);
  
          query = "SELECT * FROM libro WHERE id = ?";
-         respuesta = await conexion.query(query, [req.params.id]);
+         respuesta = await conexion.query(query, [id]);
          res.status(200).send({"MODIFICADO" : respuesta});
-        
         }
         catch(error){
           
@@ -96,7 +97,6 @@ router.put("/libro/:id" , async (req, res)=>{ //Para modificar un libro
         }
  });
 
- //PUT '/libro/prestar/:id' y {id:numero, persona_id:numero} devuelve 200 y {mensaje: "se presto correctamente"} o bien status 413, {mensaje: <descripcion del error>} "error inesperado", "el libro ya se encuentra prestado, no se puede prestar hasta que no se devuelva", "no se encontro el libro", "no se encontro la persona a la que se quiere prestar el libro"
 
  router.put("/libro/prestar/:id" , async (req, res)=>{ //Para modificar el campo persona_id para prestar libro
     const {persona_id} = req.body;
@@ -146,11 +146,15 @@ router.put("/libro/:id" , async (req, res)=>{ //Para modificar un libro
   
     const {id} = req.params;
     try{
-        if(!id){
-             throw new Error("No completaste el id del libro"); //SI NO LO COMPLETAS NO ME TIRA ESTE ERROR (REVISAR)
-        }
-        let query = "SELECT persona_id FROM libro WHERE id = ? AND persona_id IS NOT NULL";
+        let query = "SELECT * FROM libro WHERE id = ?";
         let respuesta = await conexion.query(query, [id]);
+               
+        if(respuesta.length == 0){
+            throw new Error("Ese libro no existe");
+        }
+
+         query = "SELECT persona_id FROM libro WHERE id = ? AND persona_id IS NOT NULL";
+         respuesta = await conexion.query(query, [id]);
                
         if(respuesta.length == 0){
             throw new Error("Ese libro no esta prestado");
@@ -203,4 +207,9 @@ router.delete('/libro/:id', async(req, res) => {
         res.status(413).send({ "Error": error.message });
     }
 });
+
+function isEmpty(str){
+    return (!str || 0 == str.length);
+}
+
 module.exports = router;
