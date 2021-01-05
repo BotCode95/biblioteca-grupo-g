@@ -16,8 +16,8 @@ CREATE TABLE libro(
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     descripcion VARCHAR(255),
-    categoria_id INT,
-    persona_id INT, --null por defecto
+    categoria_id INT NOT NULL,
+    persona_id INT,
     CONSTRAINT fk_persona FOREIGN KEY (persona_id) REFERENCES persona(id),
     CONSTRAINT fk_categoria FOREIGN KEY (categoria_id) REFERENCES categoria(id)
 );
@@ -28,6 +28,3 @@ CREATE TABLE categoria(
     nombre VARCHAR(100) NOT NULL
 );
 
---Actualice la tabla persona, no tenia el unico en el email
-ALTER TABLE persona
-    modify email VARCHAR(100) unique;
