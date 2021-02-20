@@ -53,6 +53,22 @@ router.post('/categoria', async (req,res) => {
     }
 });
 
+router.put("/categoria/:id" , async (req, res)=>{ //Para modificar una persona
+    const {id} = req.params;
+    const {nombre} = req.body;
+
+try{
+   
+     let query = "UPDATE categoria SET nombre = ? WHERE id= ?";
+     let respuesta = await conexion.query(query, [nombre.toUpperCase(), id]);
+
+    res.status(200).send({"Respuesta" : respuesta});
+   }
+catch(error){
+       res.status(413).send({"Error" : error.message});
+   }
+});
+
 router.delete('/categoria/:id', async (req,res) => {
     const {id} = req.params;
     try {
@@ -60,9 +76,9 @@ router.delete('/categoria/:id', async (req,res) => {
 
         let respuesta = await conexion.query(query, [id]);
 
-        if (respuesta.length == 0) {
-            throw new Error("Esa categoría no existe");
-        }
+        // if (respuesta.length == 0) {
+        //     throw new Error("Esa categoría no existe");
+        // }
 
         if (respuesta.length > 0) {
             throw new Error("Esta categoría tiene libros asociados, no se puede borrar");
