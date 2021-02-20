@@ -113,9 +113,12 @@ try{
     let query = "SELECT * FROM persona WHERE id = ?";
     let respuesta = await conexion.query(query, [id]);
     
-    if (respuesta.length == 0) {
-       throw new Error("Esa persona no existe");
-    }
+    // if (respuesta.length == 0) {
+    //    throw new Error("Esa persona no existe");
+    // }
+
+    query = "SELECT persona_id FROM libro WHERE persona_id = ?"
+    respuesta = await conexion.query(query, [id]);
     
     if (respuesta.length > 0) {
         throw new Error("Esta persona tiene libros asociados, no se puede borrar");
