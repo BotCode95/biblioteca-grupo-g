@@ -72,9 +72,6 @@ router.put("/persona/:id" , async (req, res)=>{ //Para modificar una persona
     const {nombre, apellido, email, alias} = req.body;
 
 try{
-    if(email){
-        throw new Error("El campo mail no se puede modificar")
-    }
     if(isEmpty(nombre) || isEmpty(apellido) || isEmpty(alias)){
         throw new Error('No completaste los campos');
     }
@@ -112,10 +109,6 @@ router.delete("/persona/:id", async (req, res)=>{
 try{
     let query = "SELECT * FROM persona WHERE id = ?";
     let respuesta = await conexion.query(query, [id]);
-    
-    // if (respuesta.length == 0) {
-    //    throw new Error("Esa persona no existe");
-    // }
 
     query = "SELECT persona_id FROM libro WHERE persona_id = ?"
     respuesta = await conexion.query(query, [id]);
@@ -125,9 +118,7 @@ try{
     }
 
     query = "DELETE FROM persona WHERE id = ?";
-
-     respuesta = await conexion.query(query, [id]);
-     
+    respuesta = await conexion.query(query, [id]); 
 
      res.status(200).send({"respuesta" : "Se borro correctamente"});
  }
