@@ -55,13 +55,12 @@ router.post("/libro", async (req, res) => {
                throw new Error("esa categoria no existe");
            }           
                        
-        //Guardo el nuevo libro
-               query = "INSERT INTO libro (nombre, descripcion, categoria_id, persona_id) VALUES (?, ?, ?,?)";
-               respuesta = await conexion.query(query, [nombre.toUpperCase(), descripcion, categoria_id, persona_id]);
-                
-               query = "SELECT * FROM libro WHERE nombre = ?";
-               respuesta = await conexion.query(query, [nombre])
-               res.status(200).send({"respuesta" : respuesta});
+            query = "INSERT INTO libro (nombre, descripcion, categoria_id, persona_id) VALUES (?, ?, ?,?)";
+            respuesta = await conexion.query(query, [nombre.toUpperCase(), descripcion, categoria_id, persona_id]);
+            
+            query = "SELECT * FROM libro WHERE nombre = ?";
+            respuesta = await conexion.query(query, [nombre])
+            res.status(200).send({"respuesta" : respuesta});
     
         }
         catch(error){
@@ -70,7 +69,7 @@ router.post("/libro", async (req, res) => {
         });
 
 
-router.put("/libro/:id" , async (req, res)=>{ //Para modificar un libro
+router.put("/libro/:id" , async (req, res)=>{ 
    const {nombre, descripcion, categoria_id, persona_id} = req.body;
    const {id} = req.params;
     try{
@@ -80,10 +79,7 @@ router.put("/libro/:id" , async (req, res)=>{ //Para modificar un libro
  
         let query = "SELECT * FROM libro WHERE nombre = ? AND categoria_id = ? AND id = ?";
         let respuesta = await conexion.query(query, [nombre, categoria_id, id]);
- 
-        if(respuesta.length == 0){
-             throw new Error("Solo se puede modificar la descripcion");
-        }
+
          query = "UPDATE libro SET nombre = ?, descripcion = ?, categoria_id = ? WHERE id = ?";
          respuesta = await conexion.query(query, [nombre.toUpperCase(), descripcion, categoria_id, id]);
  
@@ -97,44 +93,16 @@ router.put("/libro/:id" , async (req, res)=>{ //Para modificar un libro
         }
  });
 
-
  router.put("/libro/prestar/:id" , async (req, res)=>{ //Para modificar el campo persona_id para prestar libro
     const {persona_id} = req.body;
     const {id} = req.params;
     try{
-         if(!persona_id){
-              throw new Error("Ingresa la persona a la que se presta el libro");
-         }
- 
-         let query = "SELECT * FROM libro WHERE id = ?";
-         let respuesta = await conexion.query(query, [id]);
-         
-        
-         if(respuesta.length == 0){
-             throw new Error("No se encontro el libro");
-         }
-         
-         query = "SELECT * FROM persona WHERE id = ? ";
-         respuesta = await conexion.query(query, [persona_id]);
- 
-         if(respuesta.length == 0){
-             throw new Error("No se encontro la persona a la que se quiere prestar el libro");
-         }
-
-         query = "SELECT persona_id FROM libro WHERE id = ? AND persona_id IS NULL"; //
-         respuesta = await conexion.query(query, [id]);
-         
-        console.log(respuesta.persona_id);
-         if(respuesta.length == 0 ){
-             throw new Error("El libro se encuentra prestado");
-         }
-
-         query = "UPDATE libro SET persona_id = ? WHERE id = ?";
-         respuesta = await conexion.query(query, [persona_id, id]);
+        let query = "UPDATE libro SET persona_id = ? WHERE id = ?";
+        let respuesta = await conexion.query(query, [persona_id, id]);
  
          query = "SELECT * FROM libro WHERE id = ?";
          respuesta = await conexion.query(query, [id]);
-         res.status(200).send({"El libro fue prestado correctamente" : respuesta});
+         res.status(200).send({"response" : respuesta});
         }
         catch(error){
             res.status(413).send({"Error" : error.message});
